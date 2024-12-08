@@ -3,23 +3,32 @@ import logging
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-@app.route(route="http_trigger")
-def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
+
+
+@app.route(route="prime")
+def prime(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
+    
+    primes = [2,3]
 
-    name = req.params.get('name')
-    if not name:
-        try:
-            req_body = req.get_json()
-        except ValueError:
-            pass
-        else:
-            name = req_body.get('name')
+    number_as_string = req.params.get('number')
 
-    if name:
-        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
-    else:
-        return func.HttpResponse(
-             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
-             status_code=200
-        )
+    number = int(number_as_string)
+
+    if number <= len(primes):
+        return func.HttpResponse(f"{primes[number-1]} is the {number}th prime number (cached)")
+    
+    number_to_test = primes[-1] + 2
+    
+    while len(primes) < number:
+        square_root = number_to_test ** 0.5
+        for prime in primes:
+            if prime > square_root:
+                primes.append(number_to_test)
+                number_to_test += 2
+                break
+            if number_to_test % prime == 0:
+                number_to_test += 2
+                break
+            
+    return func.HttpResponse(f"{primes[-1]} is the {number}th prime number")
